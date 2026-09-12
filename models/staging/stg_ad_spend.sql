@@ -1,0 +1,21 @@
+WITH SOURCE AS (
+    SELECT * FROM {{ source('internal_data', 'ad_spend') }}
+),
+
+RENAMED_AND_CAST AS (
+    SELECT
+        CAST(REPORTING_DATE AS DATE) AS DATE_DAY,
+        CAST(TOTAL_SPEND AS DECIMAL(10, 2)) AS TOTAL_SPEND,
+        CAST(TOTAL_CLICKS AS INT) AS TOTAL_CLICKS,
+        LOWER(UTM_SOURCE) AS UTM_SOURCE,
+        LOWER(UTM_CAMPAIGN) AS UTM_CAMPAIGN
+    FROM SOURCE
+)
+
+SELECT
+    *,
+    -- Metadata column
+    {{ dbt.current_timestamp() }} AS _LOADED_AT
+FROM RENAMED_AND_CAST
+
+ORDER BY DATE_DAY DESC

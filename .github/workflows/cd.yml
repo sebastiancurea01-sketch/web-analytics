@@ -1,0 +1,53 @@
+name: dbt CD - Deploy to Prod
+
+on:
+  push:
+    branches:
+      - main        # ← triggers when PR merges to main
+  workflow_dispatch:
+
+jobs:
+  dbt-prod-run:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/dbt-ci-image
+      IMAGE_TAG: latest
+
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull CI image
+        run: docker pull "${IMAGE_NAME}:${IMAGE_TAG}"
+      
+      - name: Run dbt Production Build in Docker
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/app" \
+            -e DBT_SNOWFLAKE_ACCOUNT="${{ secrets.DBT_SNOWFLAKE_ACCOUNT }}" \
+            -e DBT_SNOWFLAKE_USER="${{ secrets.DBT_SNOWFLAKE_USER }}" \
+            -e SNOWFLAKE_PRIVATE_KEY="${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" \
+            "${IMAGE_NAME}:${IMAGE_TAG}" sh -c "dbt deps && dbt build --target prod"
+      
+
+      - name: Upload Production Manifest as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-manifest
+          path: target/manifest.json
+          retention-days: 30  # Keep for 30 days
+
+

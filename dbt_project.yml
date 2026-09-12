@@ -1,0 +1,24 @@
+name: 'ecommerce_growth'
+version: '1.0.0'
+config-version: 2
+
+profile: 'ecommerce_growth'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  ecommerce_growth:             
+    staging:
+      +schema: "{{ none if target.name == 'ci' else 'staging' }}"
+    intermediate:
+      +schema: "{{ none if target.name == 'ci' else 'intermediate' }}"

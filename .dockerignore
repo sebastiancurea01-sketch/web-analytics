@@ -1,0 +1,16 @@
+
+# This file tells `docker build` which files to SKIP when it
+# copies your folder into the image (the COPY . . line in the
+# Dockerfile). Same idea as .gitignore, but for Docker instead
+# of git.
+
+.git
+.gitignore
+target/
+dbt_packages/
+logs/ 
+__pycache__/
+*.pyc
+.env
+README.md
+ 

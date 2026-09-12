@@ -1,0 +1,80 @@
+name: dbt Slim CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+
+jobs:
+  slim_ci_run:
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/dbt-ci-image
+      IMAGE_TAG: latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Fetch Main Branch
+        run: git fetch origin main
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull CI image
+        run: docker pull "${IMAGE_NAME}:${IMAGE_TAG}"
+
+      - name: Get latest successful CD run ID
+        id: last_run
+        run: |
+          RUN_ID=$(gh run list --workflow=cd.yml --branch=main --status=success \
+                     --limit=1 --json databaseId --jq '.[0].databaseId')
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download manifest from that run
+        uses: actions/download-artifact@v4
+        with:
+          name: dbt-manifest
+          path: state
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.last_run.outputs.run_id }}
+      
+      - name: Lint SQL with sqlfluff
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/app" \
+            -e DBT_SNOWFLAKE_ACCOUNT="${{ secrets.DBT_SNOWFLAKE_ACCOUNT }}" \
+            -e DBT_SNOWFLAKE_USER="${{ secrets.DBT_SNOWFLAKE_USER }}" \
+            -e SNOWFLAKE_PRIVATE_KEY="${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" \
+            -e DBT_SCHEMA="pr_${{ github.event.number }}" \
+            -v ${{ github.workspace }}/.dbt:/root/.dbt \
+            -v ${{ github.workspace }}:/usr/app \
+            "${IMAGE_NAME}:${IMAGE_TAG}" sh -c "dbt deps && sqlfluff lint models/" 
+      # To run Slim CI, dbt needs the production state
+
+      - name: Run dbt Slim CI in Docker
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/app" \
+            -e DBT_SNOWFLAKE_ACCOUNT="${{ secrets.DBT_SNOWFLAKE_ACCOUNT }}" \
+            -e DBT_SNOWFLAKE_USER="${{ secrets.DBT_SNOWFLAKE_USER }}" \
+            -e SNOWFLAKE_PRIVATE_KEY="${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" \
+            -e DBT_SCHEMA="pr_${{ github.event.number }}" \
+            "${IMAGE_NAME}:${IMAGE_TAG}" sh -c "dbt deps && if [ -f state/manifest.json ]; then dbt build --select state:modified+ --defer --state state --target ci; else dbt build --target ci; fi"
+
+      

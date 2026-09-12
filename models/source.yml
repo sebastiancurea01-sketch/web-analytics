@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: internal_data
+    database: TOY_STORE_RAW
+    schema: LANDING
+         
+    tables:
+      - name: website_sessions
+      - name: orders
+      - name: ad_spend
+

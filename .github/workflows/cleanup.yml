@@ -1,0 +1,56 @@
+name: Cleanup Ephemeral Schemas
+
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to clean up (only needed when triggering manually)'
+        required: false
+        type: string
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Snowflake CLI
+        run: pip install --quiet snowflake-cli
+
+      - name: Drop PR Schema
+        shell: bash
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.DBT_SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.DBT_SNOWFLAKE_USER }}
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+          SNOWFLAKE_ROLE: ACCOUNTADMIN  # Replace with your dedicated CI role
+          SNOWFLAKE_WAREHOUSE: DBT_WH
+          SNOWFLAKE_DATABASE: ANALYTICS_CI
+          PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.number }}
+        run: |
+          mkdir -p ~/.snowflake
+          
+          # 1. Write key and restrict key permissions
+          echo "$SNOWFLAKE_PRIVATE_KEY" > /tmp/snowflake_key.p8
+          chmod 600 /tmp/snowflake_key.p8
+
+          # 2. Generate config.toml
+          cat <<EOF > ~/.snowflake/config.toml
+          [connections.default]
+          account = "${SNOWFLAKE_ACCOUNT}"
+          user = "${SNOWFLAKE_USER}"
+          role = "${SNOWFLAKE_ROLE}"
+          warehouse = "${SNOWFLAKE_WAREHOUSE}"
+          database = "${SNOWFLAKE_DATABASE}"
+          private_key_file = "/tmp/snowflake_key.p8"
+          authenticator = "SNOWFLAKE_JWT"
+          EOF
+
+          # 3. Restrict config.toml permissions (Fixes the error)
+          chmod 600 ~/.snowflake/config.toml
+
+          # 4. Execute query
+          snow sql -q "DROP SCHEMA IF EXISTS ${SNOWFLAKE_DATABASE}.PR_${PR_NUMBER} CASCADE;"
+
+          # 5. Cleanup key
+          rm -f /tmp/snowflake_key.p8

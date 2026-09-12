@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: stg_ad_spend
+    description: >
+      Staging model for marketing ad spend data covering the last quarter.
+      Standardizes naming conventions and ensures grain consistency.
+
+    columns:
+      - name: date_day
+        description: "The date of the ad spend record."
+        tests:
+          - not_null
+
+      - name: utm_source
+        description: "The marketing channel source (e.g., Gsear, Facebook)."
+        tests:
+          - not_null
+
+      - name: utm_campaign
+        description: "The specific marketing campaign identifier."
+        tests:
+          - not_null
+
+  - name: stg_website_session
+    description: one row corrispond to 1 session
+    
+    columns: 
+      - name: session_id
+        description: primary key, unique indentifier of a single session
+        tests: 
+          - unique
+          - not_null
+
+  - name: stg_orders
+    description: one row corrispond to 1 order
+    
+    columns: 
+      - name: order_id
+        description: primary key, unique indentifier of a single order
+        tests: 
+          - unique
+          - not_null
+          
