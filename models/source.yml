@@ -8,5 +8,3 @@ sources:
     tables:
       - name: website_sessions
       - name: orders
-      - name: ad_spend
-
