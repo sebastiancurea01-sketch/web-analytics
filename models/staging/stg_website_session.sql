@@ -1,5 +1,7 @@
 WITH SOURCE AS (
     SELECT * FROM {{ source('internal_data', 'website_sessions') }}
+    {{ limit_data_in_dev('created_at') }}
+
 ),
 
 RENAMED_AND_CAST AS (

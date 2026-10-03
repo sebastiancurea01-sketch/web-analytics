@@ -16,6 +16,9 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
+vars:
+  dev_start_date: '2014-12-19'
+
 models:
   ecommerce_growth:             
     staging:
