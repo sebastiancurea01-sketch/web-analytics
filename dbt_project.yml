@@ -23,5 +23,12 @@ models:
   ecommerce_growth:             
     staging:
       +schema: "{{ none if target.name == 'ci' else 'staging' }}"
+      +materialized: view
     intermediate:
+      +schema: "{{ none if target.name == 'ci' else 'intermediate' }}"
+      +materialized: view
+    marts:
+    # dev: view  -> fast local iteration, no build cost
+    # ci/prod: table -> CI mirrors prod
+      +materialized: "{{ 'view' if target.name == 'dev' else 'table' }}"
       +schema: "{{ none if target.name == 'ci' else 'intermediate' }}"
