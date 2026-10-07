@@ -1,10 +1,16 @@
 version: 2
 
 sources:
-  - name: internal_data
-    database: TOY_STORE_RAW
-    schema: LANDING
+  - name: web_analytics
+    database: RAW
+    schema: WEB_ANALYTICS
          
     tables:
       - name: website_sessions
+        
+  - name: backend_db
+    database: RAW
+    schema: BACKEND_DB
+    
+    tables:
       - name: orders
