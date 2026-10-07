@@ -7,5 +7,9 @@ models:
     - name: user_id
       description: Primary key identifying a user.
       tests:
-        - unique
-        - not_null
+        - unique:
+            config:
+                severity: error 
+        - not_null:
+            config:
+                severity: error
