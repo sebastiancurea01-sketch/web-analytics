@@ -4,18 +4,18 @@ WITH source AS (
 
 ),
 
-RENAMED_AND_CAST AS (
+renamed_and_cast AS (
     SELECT
         CAST(website_session_id AS STRING) AS session_id,
-        CAST(CREATED_AT AS TIMESTAMP) AS session_timestamp,
-        CAST(CREATED_AT AS DATE) AS session_date,
-        CAST(USER_ID AS STRING) AS user_id,
-        COALESCE(nullif(nullif(trim(utm_source), ''), 'NULL'), 'direct') as utm_source,
-        nullif(nullif(trim(utm_content), ''), 'NULL') as utm_content,
-        nullif(nullif(trim(utm_campaign), ''), 'NULL') as utm_campaign,
+        CAST(created_at AS TIMESTAMP) AS session_timestamp,
+        CAST(created_at AS DATE) AS session_date,
+        CAST(user_id AS STRING) AS user_id,
         device_type,
-        COALESCE(nullif(nullif(trim(http_referer), ''), 'NULL'), 'direct') as http_referer
+        COALESCE(NULLIF(NULLIF(TRIM(utm_source), ''), 'NULL'), 'direct') AS utm_source,
+        NULLIF(NULLIF(TRIM(utm_content), ''), 'NULL') AS utm_content,
+        NULLIF(NULLIF(TRIM(utm_campaign), ''), 'NULL') AS utm_campaign,
+        COALESCE(NULLIF(NULLIF(TRIM(http_referer), ''), 'NULL'), 'direct') AS http_referer
     FROM source
 )
 
-SELECT * FROM RENAMED_AND_CAST
+SELECT * FROM renamed_and_cast

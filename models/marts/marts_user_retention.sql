@@ -63,10 +63,10 @@ SELECT
     ft.first_device_type,
     st.second_session_id,
     st.second_session_at,
-    DATEDIFF(DAY, ft.first_session_at, st.second_session_at) AS days_to_second_session,
-    ts.tot_sessions
+    ts.tot_sessions,
+    DATEDIFF(DAY, ft.first_session_at, st.second_session_at) AS days_to_second_session
 FROM first_touch AS ft
 LEFT JOIN second_touch AS st
     ON ft.user_id = st.user_id
-JOIN tot_sessions AS ts
+INNER JOIN tot_sessions AS ts
     ON ft.user_id = ts.user_id
