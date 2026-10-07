@@ -6,7 +6,7 @@ models:
     
     columns: 
       - name: session_id
-        description: primary key, unique indentifier of a single session
+        description: PK, unique indentifier of a single session
         tests: 
           - unique
           - not_null
@@ -26,6 +26,16 @@ models:
       - name: http_referer
         description: >
           Referring URL header; converts string `'NULL'` and empty inputs, defaulting direct/bookmark visits to `'direct_typed'`.
+
+  - name: stg_website_pageviews
+    description: 1 row = 1 pageview
+    
+    columns: 
+      - name: pageview_id
+        description: PK, unique indentifier of a single order
+        tests: 
+          - unique
+          - not_null
 
   - name: stg_orders
     description: one row corrispond to 1 order

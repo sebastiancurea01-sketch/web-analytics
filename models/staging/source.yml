@@ -7,6 +7,7 @@ sources:
          
     tables:
       - name: website_sessions
+      - name: website_pageviews
         
   - name: backend_db
     database: RAW
