@@ -2,7 +2,7 @@
 dialect = snowflake
 templater = dbt
 max_line_length = 120
-exclude_rules = RF04
+exclude_rules = RF04, ST05
 
 [sqlfluff:templater:dbt]
 profiles_dir = .

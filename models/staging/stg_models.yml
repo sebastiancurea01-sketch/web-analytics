@@ -10,6 +10,22 @@ models:
         tests: 
           - unique
           - not_null
+      
+      - name: utm_source
+        description: >
+          Traffic origin platform; converts string `'NULL'` and empty inputs, defaulting untagged arrivals to `'direct'`.
+
+      - name: utm_campaign
+        description: >
+          Marketing campaign name; parses literal string `'NULL'` and empty inputs into explicit SQL `NULL`.
+
+      - name: utm_content
+        description: >
+          Ad creative or A/B variant; parses literal string `'NULL'` and empty inputs into explicit SQL `NULL`.
+
+      - name: http_referer
+        description: >
+          Referring URL header; converts string `'NULL'` and empty inputs, defaulting direct/bookmark visits to `'direct_typed'`.
 
   - name: stg_orders
     description: one row corrispond to 1 order
