@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: marts_user_retention
+    description: One row per user.
+    columns:
+    - name: user_id
+      description: Primary key identifying a user.
+      tests:
+        - unique
+        - not_null
