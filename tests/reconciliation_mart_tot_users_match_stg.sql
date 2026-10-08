@@ -1,4 +1,3 @@
--- tests/assert_mart_users_match_staging.sql
 SELECT
     m.total_mart,
     s.total_stg
