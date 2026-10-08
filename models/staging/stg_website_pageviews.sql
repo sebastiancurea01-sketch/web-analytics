@@ -5,11 +5,11 @@ WITH source AS (
 
 renamed_and_cast AS (
     SELECT
-        CAST(WEBSITE_PAGEVIEW_ID AS STRING) AS pageview_id,
-        CAST(CREATED_AT AS TIMESTAMP) AS pageview_timestamp,
-        CAST(WEBSITE_SESSION_ID AS STRING) AS session_id,
-        CAST(PAGEVIEW_URL AS STRING) AS pageview_url
+        CAST(website_pageview_id AS STRING) AS pageview_id,
+        CAST(created_at AS TIMESTAMP) AS pageview_timestamp,
+        CAST(website_session_id AS STRING) AS session_id,
+        CAST(pageview_url AS STRING) AS pageview_url
     FROM source
 )
 
-SELECT * FROM renamed_and_cast        
+SELECT * FROM renamed_and_cast
