@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: int_pageviews_aggregated_to_sessions
+    description: 1 row = 1 session.
+    columns:
+    - name: session_id
+      description: PK, Primary key identifying a session.
+      tests:
+        - unique:
+            config:
+                severity: error 
+        - not_null:
+            config:
+                severity: error
