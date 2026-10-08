@@ -2,19 +2,16 @@ WITH source AS (
     SELECT * FROM {{ source('backend_db', 'orders') }}
 ),
 
-RENAMED_AND_CAST AS (
+renamed_and_cast AS (
     SELECT
-        CAST(ORDER_ID AS STRING) AS order_id,
-        CAST(CREATED_AT AS TIMESTAMP) AS ordered_at,
-        CAST(CREATED_AT AS DATE) AS ordered_date, 
-        CAST(WEBSITE_SESSION_ID AS STRING) AS session_id,
-        CAST(USER_ID AS STRING) AS user_id,
-        CAST(ITEMS_PURCHASED AS INT) AS items_purchased,
-        CAST(PRICE_USD AS DECIMAL(10, 2)) AS price_usd,
+        CAST(order_id AS STRING) AS order_id,
+        CAST(created_at AS TIMESTAMP) AS ordered_at,
+        CAST(created_at AS DATE) AS ordered_date,
+        CAST(website_session_id AS STRING) AS session_id,
+        CAST(user_id AS STRING) AS user_id,
+        CAST(items_purchased AS INT) AS items_purchased,
+        CAST(price_usd AS DECIMAL(10, 2)) AS price_usd
     FROM source
 )
 
 SELECT * FROM renamed_and_cast
-
-
-

@@ -9,10 +9,9 @@ FROM
     ) AS m
 CROSS JOIN
     (
-        SELECT count(order_id) AS total_stg
+        SELECT COUNT(order_id) AS total_stg
         FROM
             {{ ref('stg_orders') }}
     ) AS s
 WHERE
     m.total_mart != s.total_stg
-    

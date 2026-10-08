@@ -62,7 +62,7 @@ orders_first_touch AS (
         user_id,
         order_id AS first_order_id,
         ordered_at AS first_ordered_at,
-        session_id AS first_order_session_id,
+        session_id AS first_order_session_id
     FROM ranked_orders
     WHERE order_number = 1
 ),
