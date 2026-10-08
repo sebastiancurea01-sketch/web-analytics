@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: stg_website_session
+  - name: stg_website_sessions
     description: one row corrispond to 1 session
     
     columns: 
@@ -9,7 +9,11 @@ models:
         description: primary key, unique indentifier of a single session
         tests: 
           - unique
+            config:
+                severity: error 
           - not_null
+            config:
+                severity: error 
       
       - name: utm_source
         description: >
