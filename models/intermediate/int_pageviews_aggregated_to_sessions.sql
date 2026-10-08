@@ -1,12 +1,4 @@
-WITH tot_pageviews AS (
-    SELECT
-        session_id,
-        count(pageview_id) as tot_pageviews
-    FROM {{ref('stg_website_pageviews')}}
-    GROUP BY session_id
-),
-
-pageviews AS (
+WITH pageviews AS (
     SELECT
         pageview_id,
         pageview_timestamp,
@@ -20,6 +12,14 @@ sessions AS (
         user_id,
         session_id
     FROM {{ref('stg_website_sessions')}}
+),
+
+tot_pageviews AS (
+    SELECT
+        session_id,
+        count(pageview_id) as tot_pageviews
+    FROM {{ref('stg_website_pageviews')}}
+    GROUP BY session_id
 ),
 
 first_touch AS (
