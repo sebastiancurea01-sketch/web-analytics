@@ -1,15 +1,19 @@
 version: 2
 
 models:
-  - name: stg_website_session
+  - name: stg_website_sessions
     description: one row corrispond to 1 session
     
     columns: 
       - name: session_id
         description: PK, unique indentifier of a single session
         tests: 
-          - unique
-          - not_null
+          - unique:
+              config:
+                severity: error 
+          - not_null:
+              config:
+                severity: error 
       
       - name: utm_source
         description: >
