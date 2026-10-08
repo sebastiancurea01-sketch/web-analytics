@@ -8,11 +8,11 @@ models:
       - name: session_id
         description: primary key, unique indentifier of a single session
         tests: 
-          - unique
-            config:
+          - unique:
+              config:
                 severity: error 
-          - not_null
-            config:
+          - not_null:
+              config:
                 severity: error 
       
       - name: utm_source
