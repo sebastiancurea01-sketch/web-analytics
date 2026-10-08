@@ -50,6 +50,21 @@ tot_sessions AS (
         COUNT(session_id) AS tot_sessions
     FROM sessions
     GROUP BY user_id
+),
+
+tot_pageviews AS (
+    SELECT
+        user_id,
+        SUM(tot_pageviews) AS tot_pageviews
+    FROM {{ ref('int_pageviews_aggregated_to_sessions') }}
+    GROUP BY user_id
+),
+
+first_url AS (
+    SELECT
+        session_id,
+        first_url
+    FROM {{ ref('int_pageviews_aggregated_to_sessions') }}
 )
 
 SELECT
@@ -61,12 +76,19 @@ SELECT
     ft.first_utm_content,
     ft.first_http_referer,
     ft.first_device_type,
+    fu.first_url,
     st.second_session_id,
     st.second_session_at,
     ts.tot_sessions,
+    tp.tot_pageviews,
     DATEDIFF(DAY, ft.first_session_at, st.second_session_at) AS days_to_second_session
 FROM first_touch AS ft
 LEFT JOIN second_touch AS st
     ON ft.user_id = st.user_id
 INNER JOIN tot_sessions AS ts
     ON ft.user_id = ts.user_id
+INNER JOIN tot_pageviews AS tp
+    ON ft.user_id = tp.user_id
+INNER JOIN first_url AS fu
+    ON ft.first_session_id = fu.session_id
+ORDER BY ft.user_id
