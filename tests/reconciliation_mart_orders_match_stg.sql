@@ -3,15 +3,15 @@ SELECT
     s.total_stg
 FROM
     (
-        SELECT count(*) AS total_mart
+        SELECT SUM(tot_orders) AS total_mart
         FROM
             {{ ref('marts_user_retention') }}
     ) AS m
 CROSS JOIN
     (
-        SELECT count(DISTINCT user_id) AS total_stg
+        SELECT COUNT(order_id) AS total_stg
         FROM
-            {{ ref('stg_website_sessions') }}
+            {{ ref('stg_orders') }}
     ) AS s
 WHERE
     m.total_mart != s.total_stg

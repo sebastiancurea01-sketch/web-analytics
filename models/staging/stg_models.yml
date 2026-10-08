@@ -42,12 +42,16 @@ models:
           - not_null
 
   - name: stg_orders
-    description: one row corrispond to 1 order
+    description: 1 row = 1 order
     
     columns: 
       - name: order_id
         description: primary key, unique indentifier of a single order
         tests: 
-          - unique
-          - not_null
+          - unique:
+              config:
+                severity: error 
+          - not_null:
+              config:
+                severity: error 
           
