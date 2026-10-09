@@ -23,6 +23,34 @@ orders AS (
     FROM {{ ref('stg_orders') }}
 ),
 
+session_pageviews AS (
+    SELECT
+        user_id,
+        session_id,
+        tot_pageviews,
+        first_url
+    FROM {{ ref('int_pageviews_aggregated_to_sessions') }}
+),
+
+------------------------- JOINED ---------------------------------------
+
+session_joined_pageviews AS (
+    SELECT
+        s.user_id,
+        s.session_id,
+        s.session_timestamp,
+        s.utm_source,
+        s.utm_campaign,
+        s.utm_content,
+        s.http_referer,
+        s.device_type,
+        sp.tot_pageviews,
+        sp.first_url
+    FROM sessions AS s
+    LEFT JOIN session_pageviews AS sp
+        ON s.session_id = sp.session_id
+),
+
 ranked_sessions AS (
     SELECT
         *,
@@ -30,7 +58,7 @@ ranked_sessions AS (
             PARTITION BY user_id
             ORDER BY session_timestamp, session_id
         ) AS session_number
-    FROM sessions
+    FROM session_joined_pageviews
 ),
 
 ranked_orders AS (
@@ -52,7 +80,8 @@ first_touch AS (
         utm_campaign AS first_utm_campaign,
         utm_content AS first_utm_content,
         http_referer AS first_http_referer,
-        device_type AS first_device_type
+        device_type AS first_device_type,
+        first_url
     FROM ranked_sessions
     WHERE session_number = 1
 ),
@@ -76,11 +105,14 @@ second_touch AS (
     WHERE session_number = 2
 ),
 
-tot_sessions AS (
+------------------- SESSIONS GRAIN TOTALS --------------------
+
+user_session_totals AS (
     SELECT
         user_id,
-        COUNT(session_id) AS tot_sessions
-    FROM sessions
+        COUNT(session_id) AS tot_sessions,
+        SUM(COALESCE(tot_pageviews, 0)) AS tot_pageviews
+    FROM session_joined_pageviews
     GROUP BY user_id
 ),
 
@@ -92,21 +124,6 @@ tot_orders AS (
         SUM(items_purchased) AS tot_items_purchased
     FROM orders
     GROUP BY user_id
-),
-
-tot_pageviews AS (
-    SELECT
-        user_id,
-        SUM(tot_pageviews) AS tot_pageviews
-    FROM {{ ref('int_pageviews_aggregated_to_sessions') }}
-    GROUP BY user_id
-),
-
-first_url AS (
-    SELECT
-        session_id,
-        first_url
-    FROM {{ ref('int_pageviews_aggregated_to_sessions') }}
 )
 
 SELECT
@@ -118,11 +135,11 @@ SELECT
     ft.first_utm_content,
     ft.first_http_referer,
     ft.first_device_type,
-    fu.first_url,
+    ft.first_url,
     st.second_session_id,
     st.second_session_at,
-    ts.tot_sessions,
-    tp.tot_pageviews,
+    ust.tot_sessions,
+    ust.tot_pageviews,
     oft.first_order_id,
     oft.first_ordered_at,
     COALESCE(ot.tot_orders, 0) AS tot_orders,
@@ -132,12 +149,8 @@ SELECT
 FROM first_touch AS ft
 LEFT JOIN second_touch AS st
     ON ft.user_id = st.user_id
-INNER JOIN tot_sessions AS ts
-    ON ft.user_id = ts.user_id
-INNER JOIN tot_pageviews AS tp
-    ON ft.user_id = tp.user_id
-INNER JOIN first_url AS fu
-    ON ft.first_session_id = fu.session_id
+INNER JOIN user_session_totals AS ust
+    ON ft.user_id = ust.user_id
 LEFT JOIN orders_first_touch AS oft
     ON ft.user_id = oft.user_id
 LEFT JOIN tot_orders AS ot
