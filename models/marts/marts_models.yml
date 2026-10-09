@@ -3,13 +3,77 @@ version: 2
 models:
   - name: marts_user_retention
     description: One row per user.
+    config:
+      contract:
+        enforced: true
+      on_schema_change: append_new_columns
+
     columns:
-    - name: user_id
-      description: Primary key identifying a user.
-      tests:
-        - unique:
-            config:
-                severity: error 
-        - not_null:
-            config:
+      - name: user_id
+        data_type: varchar
+        description: Primary key identifying a user.
+        tests:
+          - unique:
+              config:
                 severity: error
+          # Constraints are ignored on dev views, so retain a test there.
+          - not_null:
+              config:
+                severity: error
+                enabled: "{{ target.name == 'dev' }}"
+        constraints:
+          - type: not_null
+
+      - name: first_session_id
+        data_type: varchar
+
+      - name: first_session_at
+        data_type: timestamp_ntz
+
+      - name: first_utm_source
+        data_type: varchar
+
+      - name: first_utm_campaign
+        data_type: varchar
+
+      - name: first_utm_content
+        data_type: varchar
+
+      - name: first_http_referer
+        data_type: varchar
+
+      - name: first_device_type
+        data_type: varchar
+
+      - name: first_url
+        data_type: varchar
+
+      - name: second_session_id
+        data_type: varchar
+
+      - name: second_session_at
+        data_type: timestamp_ntz
+
+      - name: tot_sessions
+        data_type: number(38, 0)
+
+      - name: tot_pageviews
+        data_type: number(38, 0)
+
+      - name: first_order_id
+        data_type: varchar
+
+      - name: first_ordered_at
+        data_type: timestamp_ntz
+
+      - name: tot_orders
+        data_type: number(38, 0)
+
+      - name: tot_revenue
+        data_type: number(38, 2)
+
+      - name: tot_items_purchased
+        data_type: number(38, 0)
+
+      - name: days_to_second_session
+        data_type: number(9, 0)
