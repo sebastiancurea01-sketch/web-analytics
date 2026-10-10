@@ -37,8 +37,8 @@ first_touch AS (
 SELECT
     s.session_id,
     s.user_id,
-    COALESCE(tp.tot_pageviews, 0) AS tot_pageviews,
-    ft.first_url
+    ft.first_url,
+    coalesce(tp.tot_pageviews, 0) AS tot_pageviews
 FROM
     sessions AS s
 LEFT JOIN first_touch AS ft
