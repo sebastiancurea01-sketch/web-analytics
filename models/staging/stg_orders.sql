@@ -1,5 +1,6 @@
 WITH source AS (
     SELECT * FROM {{ source('backend_db', 'orders') }}
+    {{ limit_data_in_dev('created_at') }}
 ),
 
 renamed_and_cast AS (
