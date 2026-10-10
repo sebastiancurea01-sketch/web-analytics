@@ -1,0 +1,14 @@
+version: 2
+
+exposures:
+  - name: orders_by_month_dashboard
+    label: BI_user_activity
+    type: dashboard
+    maturity: low
+    url: https://app.powerbi.com/groups/me/reports/your-report-id
+    description: >
+      Power BI dashboard showing data at user level with their first touch and their aggregates
+    depends_on:
+      - ref('marts_user_retention')
+    owner:
+        name: sebastian
