@@ -1,159 +1,101 @@
-# E-commerce Growth Sustainability Analysis
-> **Can 174% YoY revenue growth survive 98% customer churn?**  
-> I found this signal analysing 3 years of transactional data in Excel + Power BI — then built a production-grade pipeline to quantify and prove it.
+# E-commerce Growth Analytics
 
-## The Analysis
+The business is growing rapidly, with **174% year-over-year growth** but maintaining a **2% churn rate**. That performance relies on paid acquisition.
 
-**174% YoY growth — but 98% of customers never returned**  
-A Maven Analytics e-commerce company grew revenue 174% YoY over 3 years 
-across 1.7M+ transactions. Exploratory analysis in Excel + Power BI revealed 
-that 98% of customers never came back for a second purchase.
+## Business Question
 
-**The problem: growth built entirely on paid acquisition**  
-Every dollar of revenue was coming from new customers — with no organic base 
-to sustain it. The source data had no marketing spend, making acquisition 
-efficiency impossible to evaluate.
+What brings customers back, and what encourages them to make repeat purchases? This project helps a marketing or data team explore the behaviors and acquisition factors associated with customer retention and value.
 
-**The answer: a synthetic ad spend model to quantify the risk**  
-I designed a synthetic ad spend table based on real Google/Bing benchmarks, 
-integrated it into the pipeline, and built `scenario__growth_sustainability` 
-to quantify exactly when the model breaks.
+## Current Output
 
-> *At $29 CAC and $62 LTV, each customer generates only $33 net value 
-> after acquisition cost — with 98% churn, there is no second purchase 
-> to improve that ratio.*
+The primary model, `marts_user_activity`, has **one row per user**. It includes:
 
-**Actionable insights:**
-- 🎯 Launch retention programme targeting first 30 days post-purchase
-- 🎯 Set minimum ROAS threshold of 4x before scaling any channel
-- 🎯 Shift 20% of budget to brand campaigns to build organic equity
+- **Acquisition context:** first-session source, campaign, content, referrer, device, and landing URL.
+- **Retention and customer value:** second-session timing, total sessions and pageviews, and order, revenue, and item totals.
 
-**Targets to reach sustainability:** Churn <60% · ROAS >4x · LTV/CAC >3x
+The mart connects each user's first-session acquisition details to return timing, engagement, and purchase outcomes.
+Comparing these metrics across acquisition groups shows which are associated with stronger retention and value.
 
----
+## Data Modelling
 
-## Architecture
-
-```
-                    ┌─────────────────────────────────┐
-                    │   Source Data (Maven Analytics) │
-                    │   Orders · Sessions · Products  │
-                    └────────────┬────────────────────┘
-                                 │ COPY INTO
-                    ┌────────────▼────────────────────┐
-                    │   Databricks Unity Catalog      │
-                    │   Raw Delta Tables              │
-                    │   (Future: Azure Data Lake)     │
-                    └────────────┬────────────────────┘
-                                 │
-                    ┌────────────▼────────────────────┐
-                    │   dbt Cloud                     │
-                    │   Staging → Intermediate → Mart │
-                    └────────────┬────────────────────┘
-                                 │
-                    ┌────────────▼────────────────────┐
-                    │   Power BI Dashboard            │
-                    │   7 KPIs · Sustainability Model │
-                    └─────────────────────────────────┘
-```
-
-**Future state:** Raw data will be ingested from Azure Data Lake Storage Gen2 
-into Databricks, replacing the current COPY INTO from local CSV. This aligns 
-the architecture with a standard Azure + Databricks enterprise stack.
-
-## dbt DAG
-> Full lineage from raw sources to mart models — every dependency is tested and documented.
-
-<img width="1000" height="185" alt="image" src="https://github.com/user-attachments/assets/81a380c7-9391-493d-a476-c72cf3a7b6e6" />
-
----
-
-## Tech Stack
-
-| Layer | Tool |
-|---|---|
-| Ingestion | Databricks, COPY INTO, Unity Catalog |
-| Transformation | dbt Cloud (Databricks adapter) |
-| Orchestration | Databricks Workflows |
-| BI | Power BI |
-| CI/CD | GitHub Actions |
-| Data Quality | dbt tests, dbt_expectations |
-| Future Ingestion | Azure Data Lake Storage Gen2 |
-
----
-
-## Dataset
-**Source:** Maven Analytics E-commerce Dataset  
-**Volume:** 1.7M+ rows — orders, sessions, order items, products, refunds  
-**Period:** March 2012 – March 2015  
-**Note:** Marketing spend data absent from source. A synthetic `ad_spend` table 
-was designed based on real Google/Bing search benchmarks and integrated as a 
-first-class source. See [ADR-002](docs/decisions/ADR-002.md).
-
----
-
-## Models
-
-| Model | Layer | Description |
+| Layer | Model | Grain and role |
 |---|---|---|
-| `stg_orders` | Staging | Cleaned orders, explicit type casts |
-| `stg_website_sessions` | Staging | Sessions with UTM attribution |
-| `stg_ad_spend` | Staging | Synthetic paid search spend by channel |
-| `int_sessions_joined_orders` | Intermediate | Sessions enriched with order data, `is_new_customer` flag |
-| `int_daily_performance_summarized` | Intermediate | Daily aggregation by channel — revenue, sessions, conversions |
-| `fct_monthly_metrics` | Mart | All 7 KPIs at monthly grain — ROAS, CAC, LTV, CR, YoY, churn, brand % |
+| Staging | `stg_website_sessions` | 1 row = session; `user_id` (FK) |
+| Staging | `stg_website_pageviews` | 1 row = pageview. |
+| Staging | `stg_orders` | 1 row = order; `user_id` (FK) |
+| Intermediate | `int_pageviews_aggregated_to_sessions` | 1 row = session |
+| Mart | `marts_user_activity` | 1 row = user_id |
 
----
+**Cardinality**
 
-## Key KPIs (full dataset 2012–2015)
 
-| KPI | Value | Benchmark | Status |
-|---|---|---|---|
-| YoY Revenue Growth | 174% | >20% | ✅ Strong |
-| Churn Rate | 98% | <40% | 🔴 Critical |
-| ROAS | ~2x | >4x | 🔴 Underperforming |
-| CAC | $29 | — | — |
-| LTV | $62 | — | — |
-| Net value per customer after CAC | $33 | >3x CAC | 🔴 Unsustainable |
+```text
+user_id 1:N website_sessions
+website_sessions 1:N website_pageviews (int model solving fanning-out)
+website_sessions 1:1 orders (no_sessions_with_multiple_orders test)
+```
 
----
+## How I build the mart table
 
-## Data Quality
-- Generic tests: `not_null`, `unique`, `relationships` on all staging models
-- Singular tests:
-  - Revenue is never negative
-  - New customers never exceed total conversions
-  - ROAS is always positive when spend exists
+1. **[PR #4: Sessions]** - Established the one-row-per-user mart from session data, adding first- and second-session details, first-touch acquisition fields, and total sessions.
+2. **[PR #5: Pageviews]** - Added pageview staging and an intermediate model that aggregates pageviews to one row per session, preventing join fan-out; added first URL and total pageviews to the mart.
+3. **[PR #7: Orders]** - Extended the mart with first-order details, order totals, revenue, and items purchased, with reconciliation tests for order metrics.
 
----
+## DAG
 
-## Key Engineering Decisions
 
-| ADR | Decision |
-|---|---|
-| [ADR-001](docs/decisions/ADR-001.md) | COPY INTO over Auto Loader — static batch dataset |
-| [ADR-002](docs/decisions/ADR-002.md) | Synthetic ad_spend table — no marketing data in source |
-| [ADR-003](docs/decisions/ADR-003.md) | Incremental models on fact tables |
-| [ADR-004](docs/decisions/ADR-004.md) | Databricks + dbt Cloud as core stack |
+## Testing Strategy
 
----
+```text
+Raw source tables
+			 |
+			 v
+Staging models
+	- Key uniqueness and not_null
+	- Order/session/pageview relationships
+	- `no_sessions_with_multiple_orders`: at most one order per session
+			 |
+			 v
+Intermediate models
+	- Session grain uniqueness
+	- Reconcile session counts to staging
+			 |
+			 v
+User retention mart
+	- Enforced output schema contract
+	- One-row-per-user uniqueness
+	- Reconcile user and order totals
+			 |
+			 v
+dbt build runs applicable model and data tests
+```
 
-## CI/CD Pipeline
- 
-Built an automated deployment pipeline to ensure code quality and reliable production deployments across the full dbt + Databricks stack.
+## Environment Separation: Development, CI, and Production
 
-## Continuous Integration
- 
-- GitHub Actions triggers on every Pull Request running only modified models via Slim CI (`state:modified+`), reducing compute costs and test time
-- Changes are isolated in a temporary schema per PR, preventing broken code from reaching production
-## Continuous Deployment
- 
-- dbt Cloud Jobs deploys all models to `prod_analytics` in Databricks on merge to main
-- Generates a fresh `manifest.json` after every prod run, enabling Slim CI to correctly diff the next PR
+The project separates fast iteration, isolated pull-request builds, and production runs:
 
----
+| Environment | Target | Database | Role | Warehouse | Materialization and data scope |
+|---|---|---|---|---|---|
+| Development | `dev` | `ANALYTICS_DEV` | `DEV` | `DEV_WH` | Views; staging data limited to `created_at >= 2014-12-19` |
+| CI | `ci` | `ANALYTICS_CI` | `CI_ROLE` | `CI_WH` | 1:1 with prod; isolated PR schema |
+| Production | `prod` | `ANALYTICS_PROD` | `TRANSFORMER` | `PROD_WH` | Staging/intermediate views; marts are tables; full data scope |
 
-## Orchestration
-Databricks Workflow DAG with on-failure email alert:
-<img width="694" height="177" alt="image" src="https://github.com/user-attachments/assets/697e7ce8-bb1e-4ea3-ab3b-4afac7667330" />
+The development date limit is applied to the staging orders, pageviews, and sessions models through `limit_data_in_dev`. Its cutoff is controlled by `dev_start_date` in `dbt_project.yml`. In dev, data tests are warnings and failures are not stored; CI and production treat test failures as errors and store failures. The checked-in `profiles.yml` defines CI and production connections only; add a dev output with the documented role and warehouse to run against Snowflake with `--target dev`.
+
+## CI/CD
+
+```text
+CI: pull_request targeting main
+	-> SQLFluff lint
+	-> dbt Slim CI build for modified models and their downstream dependencies
+		 in an isolated PR schema
+
+CD: push to main
+	-> dbt build --target prod
+	-> Save the production manifest as a workflow artifact
+		 for subsequent Slim CI runs
+```
+
+Both workflows use the project’s containerized dbt environment and GitHub Actions secrets for Snowflake credentials. CI uses the previous production manifest to defer unchanged upstream models when available; the production build generates the manifest used on later pull requests.
+
 
