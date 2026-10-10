@@ -40,6 +40,12 @@ models:
         tests: 
           - unique
           - not_null
+      - name: session_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_website_sessions')
+                field: session_id
 
   - name: stg_orders
     description: 1 row = 1 order
@@ -54,4 +60,16 @@ models:
           - not_null:
               config:
                 severity: error 
+      - name: session_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_website_sessions')
+                field: session_id
+      - name: user_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_website_sessions')
+                field: user_id
           
