@@ -8,10 +8,10 @@ We are trying to understand where does repeating customers come from, and how ma
 
 ## Current Output
 
-The primary model, `marts_user_activity`, has **one row per user**. It includes:
+The primary model, `mrt_user_activity`, has **one row per user**. It includes:
 
 - **Acquisition context:** first-session source, campaign, content, referrer, device, and landing URL.
-- **Retention and customer value:** second-session timing, total sessions and pageviews, and order, revenue, and item totals.
+- **Retention and customer value:** second-session timing, total sessions, pageviews, order, revenue, item totals.
 
 The mart connects each user's first-session acquisition details to return timing, engagement, and purchase outcomes.
 Comparing these metrics across acquisition groups shows which are associated with stronger retention and value.
@@ -22,8 +22,10 @@ These two visuals are not a dashboard. They are a proof of concept showing the m
 
 ![alt text](image-1.png)
 
-Left	Most users visit once and never return, whichever channel brought them
-Right	Acquisition is seasonal and paid-driven: it dips in spring and surges in Q4.
+<div style="display: flex; gap: 1rem;">
+	<div style="width: 50%;">Most users visit once and never return, whichever channel brought them.</div>
+	<div style="width: 50%;">Acquisition is seasonal and paid-driven: it dips in spring and surges in Q4.</div>
+</div>
 
 ## DAG
 
@@ -38,7 +40,7 @@ Right	Acquisition is seasonal and paid-driven: it dips in spring and surges in Q
 | Staging | `stg_website_pageviews` | 1 row = pageview. |
 | Staging | `stg_orders` | 1 row = order; `user_id` (FK) |
 | Intermediate | `int_pageviews_aggregated_to_sessions` | 1 row = session |
-| Mart | `marts_user_activity` | 1 row = user_id |
+| Mart | `mrt_user_activity` | 1 row = user_id |
 
 **Cardinality**
 
