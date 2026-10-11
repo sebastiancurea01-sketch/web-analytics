@@ -1,10 +1,10 @@
 # E-commerce Growth Analytics
 
-Initial EDA on the raw source tables shows revenue grew **174% year over year**, but only **12.2% of users return for a second session** and just **2% of customers place a second order (RPR)**, while growth relies on paid acquisition.
+The business is growing rapidly, with **174% year-over-year growth** but maintaining a **2% churn rate**. That performance relies on paid acquisition.
 
 ## Business Question
 
-We are trying to understand where does repeating customers come from, and how many of them return back? This project helps a marketing or data team explore the behaviors and acquisition factors associated with customer retention and value.
+What brings customers back, and what encourages them to make repeat purchases? This project helps a marketing or data team explore the behaviors and acquisition factors associated with customer retention and value.
 
 ## Current Output
 
@@ -16,21 +16,7 @@ The primary model, `marts_user_activity`, has **one row per user**. It includes:
 The mart connects each user's first-session acquisition details to return timing, engagement, and purchase outcomes.
 Comparing these metrics across acquisition groups shows which are associated with stronger retention and value.
 
-## charts
-
-These two visuals are not a dashboard. They are a proof of concept showing the mart answers the business question with simple aggregations and no extra modeling.
-
-![alt text](image-1.png)
-
-Left	Most users visit once and never return, whichever channel brought them
-Right	Acquisition is seasonal and paid-driven: it dips in spring and surges in Q4.
-
-## DAG
-
-![alt text](image-2.png)
-
 ## Data Modelling
-**Granularity**
 
 | Layer | Model | Grain and role |
 |---|---|---|
@@ -41,6 +27,7 @@ Right	Acquisition is seasonal and paid-driven: it dips in spring and surges in Q
 | Mart | `marts_user_activity` | 1 row = user_id |
 
 **Cardinality**
+
 
 ```text
 user_id 1:N website_sessions
@@ -53,6 +40,9 @@ website_sessions 1:1 orders (no_sessions_with_multiple_orders test)
 1. **[PR #4: Sessions]** - Established the one-row-per-user mart from session data, adding first- and second-session details, first-touch acquisition fields, and total sessions.
 2. **[PR #5: Pageviews]** - Added pageview staging and an intermediate model that aggregates pageviews to one row per session, preventing join fan-out; added first URL and total pageviews to the mart.
 3. **[PR #7: Orders]** - Extended the mart with first-order details, order totals, revenue, and items purchased, with reconciliation tests for order metrics.
+
+## DAG
+
 
 ## Testing Strategy
 
