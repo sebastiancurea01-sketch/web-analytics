@@ -23,6 +23,7 @@ models:
                 enabled: "{{ target.name == 'dev' }}"
         constraints:
           - type: not_null
+            warn_unsupported: false
 
       - name: first_session_id
         data_type: varchar
@@ -59,6 +60,10 @@ models:
 
       - name: tot_pageviews
         data_type: number(38, 0)
+
+      - name: is_repeat_session
+        data_type: boolean
+        description: Whether the user had at least one session marked as a repeat session.
 
       - name: first_order_id
         data_type: varchar
