@@ -71,6 +71,9 @@ models:
       - name: first_ordered_at
         data_type: timestamp_ntz
 
+      - name: second_order_at
+        data_type: timestamp_ntz
+
       - name: tot_orders
         data_type: number(38, 0)
 
@@ -81,4 +84,7 @@ models:
         data_type: number(38, 0)
 
       - name: days_to_second_session
+        data_type: number(9, 0)
+
+      - name: days_to_second_order
         data_type: number(9, 0)
