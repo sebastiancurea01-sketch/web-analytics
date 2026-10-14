@@ -7,8 +7,7 @@ WITH sessions AS (
         utm_campaign,
         utm_content,
         http_referer,
-        device_type,
-        is_repeat_session
+        device_type
     FROM {{ ref('stg_website_sessions') }}
 ),
 
@@ -45,7 +44,6 @@ session_joined_pageviews AS (
         s.utm_content,
         s.http_referer,
         s.device_type,
-        s.is_repeat_session,
         sp.tot_pageviews,
         sp.first_url
     FROM sessions AS s
@@ -121,8 +119,7 @@ user_session_totals AS (
     SELECT
         user_id,
         COUNT(session_id) AS tot_sessions,
-        SUM(COALESCE(tot_pageviews, 0)) AS tot_pageviews,
-        BOOLOR_AGG(COALESCE(is_repeat_session, FALSE)) AS is_repeat_session
+        SUM(COALESCE(tot_pageviews, 0)) AS tot_pageviews
     FROM session_joined_pageviews
     GROUP BY user_id
 ),
@@ -151,7 +148,6 @@ SELECT
     st.second_session_at,
     ust.tot_sessions,
     ust.tot_pageviews,
-    ust.is_repeat_session,
     oft.first_order_id,
     oft.first_ordered_at,
     so.second_order_at,

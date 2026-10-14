@@ -1,5 +1,5 @@
 WITH source AS (
-    SELECT * FROM {{ source('backend_db', 'orders') }}
+    SELECT * FROM {{ source('S3_staging', 'orders') }}
     {{ limit_data_in_dev('created_at') }}
 ),
 

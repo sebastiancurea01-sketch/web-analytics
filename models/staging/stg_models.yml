@@ -3,9 +3,13 @@ version: 2
 models:
   - name: stg_website_sessions
     description: one row corrispond to 1 session
+    config:
+      contract:
+        enforced: true
     
     columns: 
       - name: session_id
+        data_type: string
         description: PK, unique indentifier of a single session
         tests: 
           - unique:
@@ -14,47 +18,73 @@ models:
           - not_null:
               config:
                 severity: error 
-      
+
+      - name: session_timestamp
+        data_type: timestamp
+
+      - name: session_date
+        data_type: date
+
+      - name: user_id
+        data_type: string
+
+      - name: device_type
+        data_type: string
+
       - name: utm_source
+        data_type: string
         description: >
           Traffic origin platform; converts string `'NULL'` and empty inputs, defaulting untagged arrivals to `'direct'`.
 
-      - name: is_repeat_session
-        description: Whether the source marks this session as a repeat session.
-
-      - name: utm_campaign
-        description: >
-          Marketing campaign name; parses literal string `'NULL'` and empty inputs into explicit SQL `NULL`.
-
       - name: utm_content
+        data_type: string
         description: >
           Ad creative or A/B variant; parses literal string `'NULL'` and empty inputs into explicit SQL `NULL`.
 
+      - name: utm_campaign
+        data_type: string
+        description: >
+          Marketing campaign name; parses literal string `'NULL'` and empty inputs into explicit SQL `NULL`.
+
       - name: http_referer
+        data_type: string
         description: >
           Referring URL header; converts string `'NULL'` and empty inputs, defaulting direct/bookmark visits to `'direct_typed'`.
 
   - name: stg_website_pageviews
     description: 1 row = 1 pageview
+    config:
+      contract:
+        enforced: true
     
     columns: 
       - name: pageview_id
+        data_type: string
         description: PK, unique indentifier of a single order
         tests: 
           - unique
           - not_null
       - name: session_id
+        data_type: string
         tests:
           - relationships:
               arguments:
                 to: ref('stg_website_sessions')
                 field: session_id
+      - name: pageview_timestamp
+        data_type: timestamp
+      - name: pageview_url
+        data_type: string
 
   - name: stg_orders
     description: 1 row = 1 order
+    config:
+      contract:
+        enforced: true
     
     columns: 
       - name: order_id
+        data_type: string
         description: primary key, unique indentifier of a single order
         tests: 
           - unique:
@@ -64,15 +94,25 @@ models:
               config:
                 severity: error 
       - name: session_id
+        data_type: string
         tests:
           - relationships:
               arguments:
                 to: ref('stg_website_sessions')
                 field: session_id
       - name: user_id
+        data_type: string
         tests:
           - relationships:
               arguments:
                 to: ref('stg_website_sessions')
                 field: user_id
+      - name: ordered_at
+        data_type: timestamp
+      - name: ordered_date
+        data_type: date
+      - name: items_purchased
+        data_type: integer
+      - name: price_usd
+        data_type: decimal(10, 2)
           

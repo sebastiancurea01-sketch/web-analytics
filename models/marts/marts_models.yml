@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: mrt_user_retention
+  - name: mrt_user_activity
     description: One row per user.
     config:
       contract:
@@ -60,10 +60,6 @@ models:
 
       - name: tot_pageviews
         data_type: number(38, 0)
-
-      - name: is_repeat_session
-        data_type: boolean
-        description: Whether the user had at least one session marked as a repeat session.
 
       - name: first_order_id
         data_type: varchar
