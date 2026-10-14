@@ -151,7 +151,7 @@ SELECT
     st.second_session_at,
     ust.tot_sessions,
     ust.tot_pageviews,
-    ust.is_repeat_session,
+    ust.is_repeat_session_flag,
     oft.first_order_id,
     oft.first_ordered_at,
     so.second_order_at,
