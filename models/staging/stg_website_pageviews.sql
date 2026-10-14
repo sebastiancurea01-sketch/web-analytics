@@ -1,5 +1,5 @@
 WITH source AS (
-    SELECT * FROM {{ source('web_analytics', 'website_pageviews') }}
+    SELECT * FROM {{ source('S3_staging', 'website_pageviews') }}
     {{ limit_data_in_dev('created_at') }}
 ),
 
