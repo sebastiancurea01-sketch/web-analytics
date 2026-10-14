@@ -5,10 +5,10 @@ exposures:
     label: BI_user_activity
     type: dashboard
     maturity: low
-    url: https://app.powerbi.com/groups/me/reports/your-report-id
+    url: https://app.powerbi.com/groups/me/reports/13283729-71fc-48bd-968b-e324d77da12f/e90eff3a5ce630e7104c?experience=power-bi
     description: >
       Power BI dashboard showing data at user level with their first touch and their aggregates
     depends_on:
-      - ref('marts_user_retention')
+      - ref('mrt_user_activity')
     owner:
         name: sebastian
