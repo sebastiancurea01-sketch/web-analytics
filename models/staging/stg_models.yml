@@ -31,10 +31,6 @@ models:
       - name: device_type
         data_type: string
 
-      - name: is_repeat_session
-        data_type: integer
-        description: Whether the source marks this session as a repeat session.
-
       - name: utm_source
         data_type: string
         description: >

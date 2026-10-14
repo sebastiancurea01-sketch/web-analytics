@@ -61,10 +61,6 @@ models:
       - name: tot_pageviews
         data_type: number(38, 0)
 
-      - name: is_repeat_session_flag
-        data_type: number(38, 0)
-        description: Whether the user had at least one session marked as a repeat session, represented as 0 or 1.
-
       - name: first_order_id
         data_type: varchar
 
