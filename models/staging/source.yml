@@ -1,17 +1,20 @@
 version: 2
 
 sources:
-  - name: web_analytics
+  - name: S3_staging
     database: RAW
-    schema: WEB_ANALYTICS
+    schema: S3_STAGING
+    loaded_at_field: _loaded_at
+    config:
+      freshness:
+        warn_after:
+          count: 7
+          period: day   # warn only, so a stale personal project doesn't fail CI
          
     tables:
       - name: website_sessions
       - name: website_pageviews
-        
-  - name: backend_db
-    database: RAW
-    schema: BACKEND_DB
-    
-    tables:
       - name: orders
+
+        
+
