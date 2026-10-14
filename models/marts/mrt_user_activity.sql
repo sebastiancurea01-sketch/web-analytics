@@ -98,6 +98,14 @@ orders_first_touch AS (
     WHERE order_number = 1
 ),
 
+second_order AS (
+    SELECT
+        user_id,
+        ordered_at AS second_order_at
+    FROM ranked_orders
+    WHERE order_number = 2
+),
+
 second_touch AS (
     SELECT
         user_id,
@@ -146,10 +154,12 @@ SELECT
     ust.is_repeat_session,
     oft.first_order_id,
     oft.first_ordered_at,
+    so.second_order_at,
     COALESCE(ot.tot_orders, 0) AS tot_orders,
     COALESCE(ot.tot_revenue, 0) AS tot_revenue,
     COALESCE(ot.tot_items_purchased, 0) AS tot_items_purchased,
-    DATEDIFF(DAY, ft.first_session_at, st.second_session_at) AS days_to_second_session
+    DATEDIFF(DAY, ft.first_session_at, st.second_session_at) AS days_to_second_session,
+    DATEDIFF(DAY, oft.first_ordered_at, so.second_order_at) AS days_to_second_order
 FROM first_touch AS ft
 LEFT JOIN second_touch AS st
     ON ft.user_id = st.user_id
@@ -157,6 +167,8 @@ LEFT JOIN user_session_totals AS ust
     ON ft.user_id = ust.user_id
 LEFT JOIN orders_first_touch AS oft
     ON ft.user_id = oft.user_id
+LEFT JOIN second_order AS so
+    ON ft.user_id = so.user_id
 LEFT JOIN tot_orders AS ot
     ON ft.user_id = ot.user_id
 ORDER BY ft.user_id
