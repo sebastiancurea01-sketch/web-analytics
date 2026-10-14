@@ -5,7 +5,7 @@ FROM
     (
         SELECT sum(tot_sessions) AS total_mart
         FROM
-            {{ ref('marts_user_retention') }}
+            {{ ref('mrt_user_activity') }}
     ) AS m
 CROSS JOIN
     (
