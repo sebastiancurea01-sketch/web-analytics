@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: marts_user_retention
+  - name: mrt_user_activity
     description: One row per user.
     config:
       contract:
