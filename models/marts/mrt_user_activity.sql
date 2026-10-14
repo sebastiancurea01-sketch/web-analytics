@@ -122,7 +122,7 @@ user_session_totals AS (
         user_id,
         COUNT(session_id) AS tot_sessions,
         SUM(COALESCE(tot_pageviews, 0)) AS tot_pageviews,
-        BOOLOR_AGG(COALESCE(is_repeat_session, FALSE)) AS is_repeat_session
+        MAX(CASE WHEN COALESCE(is_repeat_session, FALSE) THEN 1 ELSE 0 END) AS is_repeat_session_flag
     FROM session_joined_pageviews
     GROUP BY user_id
 ),
