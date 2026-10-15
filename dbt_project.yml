@@ -31,7 +31,7 @@ models:
     # dev: view  -> fast local iteration, no build cost
     # ci/prod: table -> CI mirrors prod
       +materialized: "{{ 'view' if target.name == 'dev' else 'table' }}"
-      +schema: "{{ none if target.name == 'ci' else 'intermediate' }}"
+      +schema: "{{ none if target.name == 'ci' else 'marts' }}"
 
 data_tests:
   +severity: "{{ 'warn' if target.name == 'dev' else 'error' }}"

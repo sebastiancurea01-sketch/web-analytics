@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: marts_user_retention
+  - name: mrt_user_retention
     description: One row per user.
     config:
       contract:
@@ -23,6 +23,7 @@ models:
                 enabled: "{{ target.name == 'dev' }}"
         constraints:
           - type: not_null
+            warn_unsupported: false
 
       - name: first_session_id
         data_type: varchar
@@ -60,10 +61,17 @@ models:
       - name: tot_pageviews
         data_type: number(38, 0)
 
+      - name: is_repeat_session
+        data_type: boolean
+        description: Whether the user had at least one session marked as a repeat session.
+
       - name: first_order_id
         data_type: varchar
 
       - name: first_ordered_at
+        data_type: timestamp_ntz
+
+      - name: second_order_at
         data_type: timestamp_ntz
 
       - name: tot_orders
@@ -76,4 +84,7 @@ models:
         data_type: number(38, 0)
 
       - name: days_to_second_session
+        data_type: number(9, 0)
+
+      - name: days_to_second_order
         data_type: number(9, 0)

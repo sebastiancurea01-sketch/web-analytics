@@ -23,7 +23,7 @@ jobs:
           SNOWFLAKE_ACCOUNT: ${{ secrets.DBT_SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_USER: ${{ secrets.DBT_SNOWFLAKE_USER }}
           SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          SNOWFLAKE_ROLE: ACCOUNTADMIN  # Replace with your dedicated CI role
+          SNOWFLAKE_ROLE: CI_ROLE
           SNOWFLAKE_WAREHOUSE: DBT_WH
           SNOWFLAKE_DATABASE: ANALYTICS_CI
           PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.number }}

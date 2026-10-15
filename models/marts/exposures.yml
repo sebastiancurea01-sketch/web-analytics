@@ -9,6 +9,6 @@ exposures:
     description: >
       Power BI dashboard showing data at user level with their first touch and their aggregates
     depends_on:
-      - ref('marts_user_retention')
+      - ref('mrt_user_activity')
     owner:
         name: sebastian

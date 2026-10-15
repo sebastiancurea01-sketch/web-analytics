@@ -19,6 +19,9 @@ models:
         description: >
           Traffic origin platform; converts string `'NULL'` and empty inputs, defaulting untagged arrivals to `'direct'`.
 
+      - name: is_repeat_session
+        description: Whether the source marks this session as a repeat session.
+
       - name: utm_campaign
         description: >
           Marketing campaign name; parses literal string `'NULL'` and empty inputs into explicit SQL `NULL`.

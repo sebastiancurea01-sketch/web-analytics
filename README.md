@@ -1,16 +1,13 @@
-<<<<<<< Updated upstream
-# E-commerce Growth Analytics
+# E-commerce Growth Analytics: Raw Data to an Analyst-Ready Mart
 
-The business is growing rapidly, with **174% year-over-year growth** but maintaining a **2% churn rate**. That performance relies on paid acquisition.
+Initial EDA on the raw source tables shows revenue grew **174% YoY**, but only **2% of customers place a second order**, and growth relies on paid acquisition. The Growth team wants to know which channels bring customers back and what those customers are worth.
 
-## Business Question
+## Business Problem
 
-What brings customers back, and what encourages them to make repeat purchases? This project helps a marketing or data team explore the behaviors and acquisition factors associated with customer retention and value.
+The Growth team's questions are hard to answer because the source data exists only at session, pageview, and order grain. There is no reliable user-level view, and joining these tables inflates sessions, pageviews, and revenue.
 
-## Current Output
+## My Transformation Layer Solution
 
-The primary model, `marts_user_activity`, has **one row per user**. It includes:
-=======
 #### Contents
 - [E-commerce Growth Analytics: Raw Data to an Analyst-Ready Mart](#e-commerce-growth-analytics-raw-data-to-an-analyst-ready-mart)
 	- [Context](#Context)
@@ -35,15 +32,9 @@ The Growth team's questions are hard to answer because the source data exists on
 - **Output:** `mrt_user_activity`, one row per user, enforced by a schema contract and a uniqueness test:
   - **Acquisition context:** first-session source, campaign, content, referrer, device, and landing URL.
   - **Retention and customer value:** second-session timing, total sessions, pageviews, orders, revenue, item totals.
->>>>>>> Stashed changes
 
-- **Acquisition context:** first-session source, campaign, content, referrer, device, and landing URL.
-- **Retention and customer value:** second-session timing, total sessions and pageviews, and order, revenue, and item totals.
+Analysts can group by any acquisition attribute with no joins. Pageviews are pre-aggregated to session grain upstream to prevent fan-out, and user, session, and order totals reconcile back to staging through tests.
 
-<<<<<<< Updated upstream
-The mart connects each user's first-session acquisition details to return timing, engagement, and purchase outcomes.
-Comparing these metrics across acquisition groups shows which are associated with stronger retention and value.
-=======
 ### Example Questions the Mart Enables
 
 The charts below are **illustrative**: they show what an analyst can answer from this one table, not conclusions of this project.
@@ -51,10 +42,25 @@ The charts below are **illustrative**: they show what an analyst can answer from
 ![Illustrative user activity dashboard showing revenue, pageviews, and new users](docs/images/mart-example-questions.png)
 
 ## Data Lifecycle
+## Example Questions the Mart Enables
+
+The charts below are **illustrative**: they show what an analyst can answer from this one table, not conclusions of this project.
+
+![alt text](image-3.png)
+
+## Data Lifecycle
+
 ```mermaid
 %%{init: {
   "theme": "base",
   "themeVariables": { "fontSize": "22px" },
+  "flowchart": { "nodeSpacing": 60, "rankSpacing": 90, "padding": 24, "useMaxWidth": true }
+}}%%
+flowchart LR
+    S3["S3<br/>raw e-commerce files"]
+    SNF["SNOWFLAKE<br/>RBAC<br/>DEV·CI·PROD env"]
+    DBT["DBT<br/>stg → int → mart<br/>tests and docs"]
+    EXP[["BI_user_activity"]]
 
     S3 -->|"COPY INTO<br/>IAM"| SNF
     SNF -->|"source<br/>freshness"| DBT
@@ -64,6 +70,8 @@ The charts below are **illustrative**: they show what an analyst can answer from
     classDef mdl fill:#e6f6ec,stroke:#2f855a,stroke-width:2px,color:#1c4532
     classDef out fill:#f3e8ff,stroke:#7e3fbf,stroke-width:2px,color:#44337a
     class S3,SNF src
+    class DBT mdl
+    class EXP out
     linkStyle default stroke-width:2px
 ```
 
@@ -71,9 +79,9 @@ The charts below are **illustrative**: they show what an analyst can answer from
 ## DAG
 
 ![dbt lineage DAG for the mrt_user_activity mart](docs/images/dbt-lineage.png)
->>>>>>> Stashed changes
 
 ## Data Modelling
+**Granularity**
 
 | Layer | Model | Grain and role |
 |---|---|---|
@@ -81,15 +89,14 @@ The charts below are **illustrative**: they show what an analyst can answer from
 | Staging | `stg_website_pageviews` | 1 row = pageview. |
 | Staging | `stg_orders` | 1 row = order; `user_id` (FK) |
 | Intermediate | `int_pageviews_aggregated_to_sessions` | 1 row = session |
-| Mart | `marts_user_activity` | 1 row = user_id |
+| Mart | `mrt_user_activity` | 1 row = user_id |
 
 **Cardinality**
-
 
 ```text
 user_id 1:N website_sessions
 website_sessions 1:N website_pageviews (int model solving fanning-out)
-website_sessions 1:1 orders (no_sessions_with_multiple_orders test)
+website_sessions 1:0..1 orders (no_sessions_with_multiple_orders test)
 ```
 
 ## How I build the mart table
@@ -98,16 +105,15 @@ website_sessions 1:1 orders (no_sessions_with_multiple_orders test)
 2. [PR #5: Pageviews](https://github.com/sebastiancurea01-sketch/web-analytics/pull/5) - Added pageview staging and an intermediate model that aggregates pageviews to one row per session, preventing join fan-out; added first URL and total pageviews to the mart.
 3. [PR #7: Orders](https://github.com/sebastiancurea01-sketch/web-analytics/pull/7) - Extended the mart with first-order details, order totals, revenue, and items purchased, with reconciliation tests for order metrics.
 
-## DAG
-
-
 ## Testing Strategy
 
 ```text
-Raw source tables
+S3-backed Snowflake sources (RAW.S3_STAGING)
+	- Source freshness on `_loaded_at` (warn after 7 days)
 			 |
 			 v
 Staging models
+	- Enforced model contracts for the staging schema
 	- Key uniqueness and not_null
 	- Order/session/pageview relationships
 	- `no_sessions_with_multiple_orders`: at most one order per session
@@ -137,8 +143,6 @@ The project separates fast iteration, isolated pull-request builds, and producti
 | CI | `ci` | `ANALYTICS_CI` | `CI_ROLE` | `CI_WH` | 1:1 with prod; isolated PR schema |
 | Production | `prod` | `ANALYTICS_PROD` | `TRANSFORMER` | `PROD_WH` | Staging/intermediate views; marts are tables; full data scope |
 
-The development date limit is applied to the staging orders, pageviews, and sessions models through `limit_data_in_dev`. Its cutoff is controlled by `dev_start_date` in `dbt_project.yml`. In dev, data tests are warnings and failures are not stored; CI and production treat test failures as errors and store failures. The checked-in `profiles.yml` defines CI and production connections only; add a dev output with the documented role and warehouse to run against Snowflake with `--target dev`.
-
 ## CI/CD
 
 ```text
@@ -153,12 +157,6 @@ CD: push to main
 		 for subsequent Slim CI runs
 ```
 
-<<<<<<< Updated upstream
-Both workflows use the project’s containerized dbt environment and GitHub Actions secrets for Snowflake credentials. CI uses the previous production manifest to defer unchanged upstream models when available; the production build generates the manifest used on later pull requests.
-
-
-=======
 - Workflow files: [CI](.github/workflows/ci.yml) · [CD](.github/workflows/cd.yml) · [CI image build](.github/workflows/build_image.yml) · [PR schema cleanup](.github/workflows/cleanup.yml).
 
 - Both workflows use the project’s containerized dbt environment and GitHub Actions secrets for Snowflake credentials. CI uses the previous production manifest to defer unchanged upstream models when available; the production build generates the manifest used on later pull requests.
->>>>>>> Stashed changes
