@@ -8,6 +8,26 @@ The Growth team's questions are hard to answer because the source data exists on
 
 ## My Transformation Layer Solution
 
+#### Contents
+- [E-commerce Growth Analytics: Raw Data to an Analyst-Ready Mart](#e-commerce-growth-analytics-raw-data-to-an-analyst-ready-mart)
+	- [Context](#Context)
+	- [Business Problem](#business-problem)
+	- [My Transformation Layer Solution](#my-transformation-layer-solution)
+	- [Example Questions the Mart Enables](#example-questions-the-mart-enables)
+- [Data Lifecycle](#data-lifecycle)
+- [DAG](#dag)
+- [Data Modelling](#data-modelling)
+- [How I Build the Mart Table](#how-i-build-the-mart-table)
+- [Testing Strategy](#testing-strategy)
+- **[Environment Separation: Development, CI, and Production](#environment-separation-development-ci-and-production)**
+- **[CI/CD](#cicd)**
+# E-commerce Growth Analytics: Raw Data to an Analyst-Ready Mart
+Initial EDA on the raw source tables shows revenue grew **174% YoY**, but only **2% of customers place a second order**, and growth relies on paid acquisition. The Growth team wants to know which channels bring customers back and what those customers are worth.
+
+### Business Problem
+The Growth team's questions are hard to answer because the source data exists only at session, pageview, and order grain. There is no reliable user-level view, and joining these tables inflates sessions, pageviews, and revenue.
+
+### My Transformation Layer Solution
 - **Input:** raw session, pageview, and order tables at three different grains, with no user-level view.
 - **Output:** `mrt_user_activity`, one row per user, enforced by a schema contract and a uniqueness test:
   - **Acquisition context:** first-session source, campaign, content, referrer, device, and landing URL.
@@ -15,6 +35,13 @@ The Growth team's questions are hard to answer because the source data exists on
 
 Analysts can group by any acquisition attribute with no joins. Pageviews are pre-aggregated to session grain upstream to prevent fan-out, and user, session, and order totals reconcile back to staging through tests.
 
+### Example Questions the Mart Enables
+
+The charts below are **illustrative**: they show what an analyst can answer from this one table, not conclusions of this project.
+
+![Illustrative user activity dashboard showing revenue, pageviews, and new users](docs/images/mart-example-questions.png)
+
+## Data Lifecycle
 ## Example Questions the Mart Enables
 
 The charts below are **illustrative**: they show what an analyst can answer from this one table, not conclusions of this project.
@@ -51,7 +78,7 @@ flowchart LR
 
 ## DAG
 
-![alt text](image-4.png)
+![dbt lineage DAG for the mrt_user_activity mart](docs/images/dbt-lineage.png)
 
 ## Data Modelling
 **Granularity**
@@ -74,9 +101,9 @@ website_sessions 1:0..1 orders (no_sessions_with_multiple_orders test)
 
 ## How I build the mart table
 
-1. **[PR #4: Sessions]** - Established the one-row-per-user mart from session data, adding first- and second-session details, first-touch acquisition fields, and total sessions.
-2. **[PR #5: Pageviews]** - Added pageview staging and an intermediate model that aggregates pageviews to one row per session, preventing join fan-out; added first URL and total pageviews to the mart.
-3. **[PR #7: Orders]** - Extended the mart with first-order details, order totals, revenue, and items purchased, with reconciliation tests for order metrics.
+1. [PR #4: Sessions](https://github.com/sebastiancurea01-sketch/web-analytics/pull/4) - Established the one-row-per-user mart from session data, adding first- and second-session details, first-touch acquisition fields, and total sessions.
+2. [PR #5: Pageviews](https://github.com/sebastiancurea01-sketch/web-analytics/pull/5) - Added pageview staging and an intermediate model that aggregates pageviews to one row per session, preventing join fan-out; added first URL and total pageviews to the mart.
+3. [PR #7: Orders](https://github.com/sebastiancurea01-sketch/web-analytics/pull/7) - Extended the mart with first-order details, order totals, revenue, and items purchased, with reconciliation tests for order metrics.
 
 ## Testing Strategy
 
@@ -130,4 +157,6 @@ CD: push to main
 		 for subsequent Slim CI runs
 ```
 
-Both workflows use the project’s containerized dbt environment and GitHub Actions secrets for Snowflake credentials. CI uses the previous production manifest to defer unchanged upstream models when available; the production build generates the manifest used on later pull requests.
+- Workflow files: [CI](.github/workflows/ci.yml) · [CD](.github/workflows/cd.yml) · [CI image build](.github/workflows/build_image.yml) · [PR schema cleanup](.github/workflows/cleanup.yml).
+
+- Both workflows use the project’s containerized dbt environment and GitHub Actions secrets for Snowflake credentials. CI uses the previous production manifest to defer unchanged upstream models when available; the production build generates the manifest used on later pull requests.
