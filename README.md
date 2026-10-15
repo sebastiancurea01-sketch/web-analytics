@@ -3,13 +3,13 @@
 	- [Business Problem](#business-problem)
 	- [My Transformation Layer Solution](#my-transformation-layer-solution)
 	- [Example Questions the Mart Enables](#example-questions-the-mart-enables)
+- **[Environment Separation: Development, CI, and Production](#environment-separation-development-ci-and-production)**
+- **[CI/CD](#cicd)**
 - [Data Lifecycle](#data-lifecycle)
 - [DAG](#dag)
 - [Data Modelling](#data-modelling)
 - [PR Strategy for Building the Mart Table](#pr-strategy-for-building-the-mart-table)
 - [Testing Strategy](#testing-strategy)
-- **[Environment Separation: Development, CI, and Production](#environment-separation-development-ci-and-production)**
-- **[CI/CD](#cicd)**
 # E-commerce Growth Analytics: Raw Data to an Analyst-Ready Mart
 
 Initial EDA on the raw source tables shows revenue grew **174% YoY**, but only **2% of customers place a second order**, and growth relies on paid acquisition. The Growth team wants to know which channels bring customers back and what those customers are worth.
@@ -31,6 +31,34 @@ Analysts can group by any acquisition attribute with no joins. Pageviews are pre
 The charts below are **illustrative**: they show what an analyst can answer from this one table, not conclusions of this project.
 
 ![Illustrative user activity dashboard showing revenue, pageviews, and new users](docs/images/mart-example-questions.png)
+
+## Environment Separation: Development, CI, and Production
+
+The project separates fast iteration, isolated pull-request builds, and production runs:
+
+| Environment | Target | Database | Role | Warehouse | Materialization and data scope |
+|---|---|---|---|---|---|
+| Development | `dev` | `ANALYTICS_DEV` | `DEV` | `DEV_WH` | Views; staging data limited to `created_at >= 2014-12-19` |
+| CI | `ci` | `ANALYTICS_CI` | `CI_ROLE` | `CI_WH` | 1:1 with prod; isolated PR schema |
+| Production | `prod` | `ANALYTICS_PROD` | `TRANSFORMER` | `PROD_WH` | Staging/intermediate views; marts are tables; full data scope |
+
+## CI/CD
+
+```text
+CI: pull_request targeting main
+	-> SQLFluff lint
+	-> dbt Slim CI build for modified models and their downstream dependencies
+		 in an isolated PR schema
+
+CD: push to main
+	-> dbt build --target prod
+	-> Save the production manifest as a workflow artifact
+		 for subsequent Slim CI runs
+```
+
+- Workflow files: [CI](.github/workflows/ci.yml) · [CD](.github/workflows/cd.yml) · [CI image build](.github/workflows/build_image.yml) · [PR schema cleanup](.github/workflows/cleanup.yml).
+
+- Both workflows use the project’s containerized dbt environment and GitHub Actions secrets for Snowflake credentials. CI uses the previous production manifest to defer unchanged upstream models when available; the production build generates the manifest used on later pull requests.
 
 ## Data Lifecycle
 
@@ -117,30 +145,3 @@ User retention mart
 dbt build runs applicable model and data tests
 ```
 
-## Environment Separation: Development, CI, and Production
-
-The project separates fast iteration, isolated pull-request builds, and production runs:
-
-| Environment | Target | Database | Role | Warehouse | Materialization and data scope |
-|---|---|---|---|---|---|
-| Development | `dev` | `ANALYTICS_DEV` | `DEV` | `DEV_WH` | Views; staging data limited to `created_at >= 2014-12-19` |
-| CI | `ci` | `ANALYTICS_CI` | `CI_ROLE` | `CI_WH` | 1:1 with prod; isolated PR schema |
-| Production | `prod` | `ANALYTICS_PROD` | `TRANSFORMER` | `PROD_WH` | Staging/intermediate views; marts are tables; full data scope |
-
-## CI/CD
-
-```text
-CI: pull_request targeting main
-	-> SQLFluff lint
-	-> dbt Slim CI build for modified models and their downstream dependencies
-		 in an isolated PR schema
-
-CD: push to main
-	-> dbt build --target prod
-	-> Save the production manifest as a workflow artifact
-		 for subsequent Slim CI runs
-```
-
-- Workflow files: [CI](.github/workflows/ci.yml) · [CD](.github/workflows/cd.yml) · [CI image build](.github/workflows/build_image.yml) · [PR schema cleanup](.github/workflows/cleanup.yml).
-
-- Both workflows use the project’s containerized dbt environment and GitHub Actions secrets for Snowflake credentials. CI uses the previous production manifest to defer unchanged upstream models when available; the production build generates the manifest used on later pull requests.
