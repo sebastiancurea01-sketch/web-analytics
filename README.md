@@ -1,30 +1,21 @@
-# E-commerce Growth Analytics: Raw Data to an Analyst-Ready Mart
-
-Initial EDA on the raw source tables shows revenue grew **174% YoY**, but only **2% of customers place a second order**, and growth relies on paid acquisition. The Growth team wants to know which channels bring customers back and what those customers are worth.
-
-## Business Problem
-
-The Growth team's questions are hard to answer because the source data exists only at session, pageview, and order grain. There is no reliable user-level view, and joining these tables inflates sessions, pageviews, and revenue.
-
-## My Transformation Layer Solution
-
-#### Contents
+### Contents
 - [E-commerce Growth Analytics: Raw Data to an Analyst-Ready Mart](#e-commerce-growth-analytics-raw-data-to-an-analyst-ready-mart)
-	- [Context](#Context)
 	- [Business Problem](#business-problem)
 	- [My Transformation Layer Solution](#my-transformation-layer-solution)
 	- [Example Questions the Mart Enables](#example-questions-the-mart-enables)
 - [Data Lifecycle](#data-lifecycle)
 - [DAG](#dag)
 - [Data Modelling](#data-modelling)
-- [How I Build the Mart Table](#how-i-build-the-mart-table)
+- [PR Strategy for Building the Mart Table](#pr-strategy-for-building-the-mart-table)
 - [Testing Strategy](#testing-strategy)
 - **[Environment Separation: Development, CI, and Production](#environment-separation-development-ci-and-production)**
 - **[CI/CD](#cicd)**
 # E-commerce Growth Analytics: Raw Data to an Analyst-Ready Mart
+
 Initial EDA on the raw source tables shows revenue grew **174% YoY**, but only **2% of customers place a second order**, and growth relies on paid acquisition. The Growth team wants to know which channels bring customers back and what those customers are worth.
 
 ### Business Problem
+
 The Growth team's questions are hard to answer because the source data exists only at session, pageview, and order grain. There is no reliable user-level view, and joining these tables inflates sessions, pageviews, and revenue.
 
 ### My Transformation Layer Solution
@@ -40,13 +31,6 @@ Analysts can group by any acquisition attribute with no joins. Pageviews are pre
 The charts below are **illustrative**: they show what an analyst can answer from this one table, not conclusions of this project.
 
 ![Illustrative user activity dashboard showing revenue, pageviews, and new users](docs/images/mart-example-questions.png)
-
-## Data Lifecycle
-## Example Questions the Mart Enables
-
-The charts below are **illustrative**: they show what an analyst can answer from this one table, not conclusions of this project.
-
-![alt text](image-3.png)
 
 ## Data Lifecycle
 
@@ -99,7 +83,7 @@ website_sessions 1:N website_pageviews (int model solving fanning-out)
 website_sessions 1:0..1 orders (no_sessions_with_multiple_orders test)
 ```
 
-## How I build the mart table
+## PR Strategy for Building the Mart Table
 
 1. [PR #4: Sessions](https://github.com/sebastiancurea01-sketch/web-analytics/pull/4) - Established the one-row-per-user mart from session data, adding first- and second-session details, first-touch acquisition fields, and total sessions.
 2. [PR #5: Pageviews](https://github.com/sebastiancurea01-sketch/web-analytics/pull/5) - Added pageview staging and an intermediate model that aggregates pageviews to one row per session, preventing join fan-out; added first URL and total pageviews to the mart.
