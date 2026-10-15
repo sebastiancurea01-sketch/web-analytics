@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 # E-commerce Growth Analytics
 
 The business is growing rapidly, with **174% year-over-year growth** but maintaining a **2% churn rate**. That performance relies on paid acquisition.
@@ -9,12 +10,68 @@ What brings customers back, and what encourages them to make repeat purchases? T
 ## Current Output
 
 The primary model, `marts_user_activity`, has **one row per user**. It includes:
+=======
+#### Contents
+- [E-commerce Growth Analytics: Raw Data to an Analyst-Ready Mart](#e-commerce-growth-analytics-raw-data-to-an-analyst-ready-mart)
+	- [Context](#Context)
+	- [Business Problem](#business-problem)
+	- [My Transformation Layer Solution](#my-transformation-layer-solution)
+	- [Example Questions the Mart Enables](#example-questions-the-mart-enables)
+- [Data Lifecycle](#data-lifecycle)
+- [DAG](#dag)
+- [Data Modelling](#data-modelling)
+- [How I Build the Mart Table](#how-i-build-the-mart-table)
+- [Testing Strategy](#testing-strategy)
+- **[Environment Separation: Development, CI, and Production](#environment-separation-development-ci-and-production)**
+- **[CI/CD](#cicd)**
+# E-commerce Growth Analytics: Raw Data to an Analyst-Ready Mart
+Initial EDA on the raw source tables shows revenue grew **174% YoY**, but only **2% of customers place a second order**, and growth relies on paid acquisition. The Growth team wants to know which channels bring customers back and what those customers are worth.
+
+### Business Problem
+The Growth team's questions are hard to answer because the source data exists only at session, pageview, and order grain. There is no reliable user-level view, and joining these tables inflates sessions, pageviews, and revenue.
+
+### My Transformation Layer Solution
+- **Input:** raw session, pageview, and order tables at three different grains, with no user-level view.
+- **Output:** `mrt_user_activity`, one row per user, enforced by a schema contract and a uniqueness test:
+  - **Acquisition context:** first-session source, campaign, content, referrer, device, and landing URL.
+  - **Retention and customer value:** second-session timing, total sessions, pageviews, orders, revenue, item totals.
+>>>>>>> Stashed changes
 
 - **Acquisition context:** first-session source, campaign, content, referrer, device, and landing URL.
 - **Retention and customer value:** second-session timing, total sessions and pageviews, and order, revenue, and item totals.
 
+<<<<<<< Updated upstream
 The mart connects each user's first-session acquisition details to return timing, engagement, and purchase outcomes.
 Comparing these metrics across acquisition groups shows which are associated with stronger retention and value.
+=======
+### Example Questions the Mart Enables
+
+The charts below are **illustrative**: they show what an analyst can answer from this one table, not conclusions of this project.
+
+![Illustrative user activity dashboard showing revenue, pageviews, and new users](docs/images/mart-example-questions.png)
+
+## Data Lifecycle
+```mermaid
+%%{init: {
+  "theme": "base",
+  "themeVariables": { "fontSize": "22px" },
+
+    S3 -->|"COPY INTO<br/>IAM"| SNF
+    SNF -->|"source<br/>freshness"| DBT
+    DBT -->|"enforced contracts<br/>exposure"| EXP
+
+    classDef src fill:#e8f1fb,stroke:#2b6cb0,stroke-width:2px,color:#1a365d
+    classDef mdl fill:#e6f6ec,stroke:#2f855a,stroke-width:2px,color:#1c4532
+    classDef out fill:#f3e8ff,stroke:#7e3fbf,stroke-width:2px,color:#44337a
+    class S3,SNF src
+    linkStyle default stroke-width:2px
+```
+
+
+## DAG
+
+![dbt lineage DAG for the mrt_user_activity mart](docs/images/dbt-lineage.png)
+>>>>>>> Stashed changes
 
 ## Data Modelling
 
@@ -37,9 +94,9 @@ website_sessions 1:1 orders (no_sessions_with_multiple_orders test)
 
 ## How I build the mart table
 
-1. **[PR #4: Sessions]** - Established the one-row-per-user mart from session data, adding first- and second-session details, first-touch acquisition fields, and total sessions.
-2. **[PR #5: Pageviews]** - Added pageview staging and an intermediate model that aggregates pageviews to one row per session, preventing join fan-out; added first URL and total pageviews to the mart.
-3. **[PR #7: Orders]** - Extended the mart with first-order details, order totals, revenue, and items purchased, with reconciliation tests for order metrics.
+1. [PR #4: Sessions](https://github.com/sebastiancurea01-sketch/web-analytics/pull/4) - Established the one-row-per-user mart from session data, adding first- and second-session details, first-touch acquisition fields, and total sessions.
+2. [PR #5: Pageviews](https://github.com/sebastiancurea01-sketch/web-analytics/pull/5) - Added pageview staging and an intermediate model that aggregates pageviews to one row per session, preventing join fan-out; added first URL and total pageviews to the mart.
+3. [PR #7: Orders](https://github.com/sebastiancurea01-sketch/web-analytics/pull/7) - Extended the mart with first-order details, order totals, revenue, and items purchased, with reconciliation tests for order metrics.
 
 ## DAG
 
@@ -96,6 +153,12 @@ CD: push to main
 		 for subsequent Slim CI runs
 ```
 
+<<<<<<< Updated upstream
 Both workflows use the project’s containerized dbt environment and GitHub Actions secrets for Snowflake credentials. CI uses the previous production manifest to defer unchanged upstream models when available; the production build generates the manifest used on later pull requests.
 
 
+=======
+- Workflow files: [CI](.github/workflows/ci.yml) · [CD](.github/workflows/cd.yml) · [CI image build](.github/workflows/build_image.yml) · [PR schema cleanup](.github/workflows/cleanup.yml).
+
+- Both workflows use the project’s containerized dbt environment and GitHub Actions secrets for Snowflake credentials. CI uses the previous production manifest to defer unchanged upstream models when available; the production build generates the manifest used on later pull requests.
+>>>>>>> Stashed changes
